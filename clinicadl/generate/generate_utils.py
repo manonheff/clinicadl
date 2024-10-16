@@ -27,6 +27,8 @@ def find_file_type(
 ) -> Dict[str, str]:
     if preprocessing == "t1-linear":
         file_type = linear_nii("T1w", uncropped_image)
+    elif preprocessing == "flair-linear":
+        file_type = linear_nii("flair", uncropped_image)
     elif preprocessing == "pet-linear":
         if tracer is None or suvr_reference_region is None:
             raise ClinicaDLArgumentError(
