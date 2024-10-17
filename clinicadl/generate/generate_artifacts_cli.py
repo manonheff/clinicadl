@@ -27,7 +27,7 @@ from clinicadl.utils import cli_param
     type=float,
     nargs=2,
     default=[-0.2, -0.05],
-    help="Range between -1 and 1 for gamma augmentation",
+    help="Range between -1 and 1 for gamma augmentation. Values for range [a,b] must be provided as --gamma a b.",
 )
 # Motion
 @click.option(
@@ -40,16 +40,16 @@ from clinicadl.utils import cli_param
 @click.option(
     "--translation",
     type=float,
-    multiple=2,
+    nargs=2,
     default=[2, 4],
-    help="Range in mm for the translation",
+    help="Range in mm for the translation. Values for range [a,b] must be provided as --translation a b",
 )
 @click.option(
     "--rotation",
     #    type=float,
-    multiple=2,
+    nargs=2,
     default=[2, 4],
-    help="Range in degree for the rotation",
+    help="Range in degree for the rotation. Values for range [a,b] must be provided as --rotation a b",
 )
 @click.option(
     "--num_transforms",
@@ -68,9 +68,9 @@ from clinicadl.utils import cli_param
 @click.option(
     "--noise_std",
     type=float,
-    multiple=2,
+    nargs=2,
     default=[5, 15],
-    help="Range for noise standard deviation",
+    help="Range for noise standard deviation. Values for range [a,b] must be provided as --noise_std a b",
 )
 def cli(
     caps_directory,
