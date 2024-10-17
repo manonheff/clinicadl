@@ -25,7 +25,7 @@ from clinicadl.utils import cli_param
 @click.option(
     "--gamma",
     type=float,
-    multiple=2,
+    nargs=2,
     default=[-0.2, -0.05],
     help="Range between -1 and 1 for gamma augmentation",
 )
