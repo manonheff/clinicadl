@@ -97,7 +97,7 @@ def linear_nii(modality: str, uncropped_image: bool) -> dict:
         desc_crop = "_desc-Crop"
 
     information = {
-        "pattern": f"*space-MNI152NLin2009cSym{desc_crop}_res-1x1x1_{modality}.nii.gz",
+        "pattern": f"*space-MNI152NLin2009cSym{desc_crop}_res-1x1x1_{modality}*.nii.gz",
         "description": f"{modality} Image registered in MNI152NLin2009cSym space using {needed_pipeline} pipeline "
         + (
             ""
