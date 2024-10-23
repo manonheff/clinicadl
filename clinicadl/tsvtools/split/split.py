@@ -314,11 +314,12 @@ def split_diagnoses(
                 n += 1
             try:
                 labels_df = pd.read_csv(parents_path / "labels.tsv", sep="\t")
+
                 diagnosis_df = pd.merge(
                     diagnosis_df,
                     labels_df,
                     how="inner",
-                    on=["participant_id", "session_id"],
+                    on=["participant_id", "session_id","diagnosis"],
                 )
             except Exception:
                 raise ClinicaDLTSVError(

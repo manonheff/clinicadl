@@ -43,7 +43,6 @@ def write_splits(
     """
 
     baseline_df = extract_baseline(diagnosis_df)
-
     if split_label is None:
         diagnoses_list = list(baseline_df["diagnosis"])
         unique = list(set(diagnoses_list))
@@ -168,7 +167,7 @@ def split_diagnoses(
                     diagnosis_df,
                     labels_df,
                     how="inner",
-                    on=["participant_id", "session_id"],
+                    on=["participant_id", "session_id", "diagnosis" ],
                 )
             except Exception:
                 raise ClinicaDLTSVError(
