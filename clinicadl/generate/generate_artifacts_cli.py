@@ -16,6 +16,13 @@ from clinicadl.utils import cli_param
 ##############
 # Contrast
 @click.option(
+    "--mni-mask", 
+    type=bool,
+    default=False,
+    is_flag=True,
+    help="If True, an MNI mask is applied to the final image to set the background to 0.",
+)
+@click.option(
     "--contrast/--no-contrast",
     type=bool,
     default=False,
@@ -89,6 +96,7 @@ def cli(
     noise,
     noise_std,
     n_proc,
+    mni_mask
 ):
     """Generation of trivial dataset with addition of synthetic artifacts.
     CAPS_DIRECTORY is the CAPS folder from where input brain images will be loaded.
@@ -112,6 +120,7 @@ def cli(
         noise=noise,
         noise_std=noise_std,
         n_proc=n_proc,
+        mni_mask = mni_mask
     )
 
 
