@@ -247,7 +247,7 @@ class SplitManager:
                 for idx in range(len(caps_df)):
                     cohort = caps_df.loc[idx, "cohort"]
                     caps_path = caps_df.loc[idx, "path"]
-                    check_caps_folder(caps_path)
+                    check_caps_folder(Path(caps_path))
                     caps_dict[cohort] = caps_path
         else:
             check_caps_folder(caps_directory)
