@@ -80,13 +80,10 @@ def localised_poor_contrast_mask(seg_img: np.array, fo_margin : float = 0.1) -> 
 	#return (quadran_gm_mask == 1), (quadran_wm_mask == 1)
 	return quadran_gm_mask, quadran_wm_mask
 
-def smoother_transitions_on_gm(localised_gm_mask: np.array, full_gm_mask: np.array, blurred_localised_gm_mask : np.array, anomaly_degree : int, sigma : float = 3) -> np.array :
-	dilated = dilation(localised_gm_mask, footprint = ball(radius = 1))
-	gaussian = smooth_mask(dilated, anomaly_degree, sigma= sigma)
-	intersect = gaussian * full_gm_mask # mask of full grey matter with an intensity decrease on the desired quadran
-	intersect[intersect == 0] = 1 # recreate multiplicative mask
-	merged = np.minimum(intersect, blurred_localised_gm_mask) # wm/gm smooth borders come from blurred_localised_gm_mask and within the gm from intersect
-	return merged
+def get_full_gm_mask(seg_img : np.array) -> np.array:
+	left_gm_labels, right_gm_labels = get_left_right_gm_labels()
+	full_gm_mask = np.isin(seg_img, left_gm_labels + right_gm_labels)
+	return full_gm_mask
 
 
 def lower_contrast(brain_filepath : str, seg_filepath : str, anomaly_degree : float, save = True):
@@ -112,22 +109,23 @@ def lower_contrast(brain_filepath : str, seg_filepath : str, anomaly_degree : fl
 
 	normalized_brain = normalized_value(brain_img) # min max normalization
 
+	full_gm_mask = get_full_gm_mask(seg_img)
 	# decrease contrast 
 	localised_gm_mask, localised_wm_mask = localised_poor_contrast_mask(seg_img)
 
 	wm = normalized_brain[localised_wm_mask]
 	gm = normalized_brain[localised_gm_mask]
-	med_percent_diff = 2 * (np.median(gm) - np.median(wm)) / (np.median(gm) + np.median(wm)) * 100 
+	med_percent_diff = 2 * (np.median(gm) - np.median(wm)) / (np.median(gm) + np.median(wm)) * 100
 	print("Median percentage difference:",med_percent_diff)
 
 	dilated = dilation(localised_gm_mask, footprint = ball(radius = 2))
 	coef = np.random.uniform(1.5, 2.1)
 	print("Intensity coef:", coef)
 	blurred_localised_gm_mask = smooth_mask(dilated, med_percent_diff * coef, sigma = 2.5)
-	blurred_localised_gm_mask *= full_gm_mask
-	blurred_localised_gm_mask[blurred_localised_gm_mask == 0] = 1
+	blurred_localised_gm_mask *= full_gm_mask # keep only the gm part
+	blurred_localised_gm_mask[blurred_localised_gm_mask == 0] = 1 # recreate multiplicative mask
 
-	contrast_mask = gaussian_filter(blurred_localised_gm_mask, sigma=1)
+	contrast_mask = gaussian_filter(blurred_localised_gm_mask, sigma=1) 
 
 	if debug : 
 		mask_img = nib.Nifti1Image(contrast_mask, brain_nifti.affine, brain_nifti.header)
