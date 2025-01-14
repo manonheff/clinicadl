@@ -16,7 +16,7 @@ from clinicadl.utils import cli_param
 ##############
 # Contrast
 @click.option(
-    "--mni-mask", 
+    "--mni_mask", 
     type=bool,
     default=False,
     is_flag=True,

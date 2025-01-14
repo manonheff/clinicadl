@@ -188,6 +188,7 @@ class CapsDataset(Dataset):
         except ClinicaDLCAPSError:
             file_type = self.preprocessing_dict["file_type"]
             file_type["pattern"] = file_type["pattern"].replace(".nii.gz", ".pt")
+            print("Information:",participant, session, self.caps_dict[cohort], file_type)
             results = clinicadl_file_reader(
                 [participant], [session], self.caps_dict[cohort], file_type
             )

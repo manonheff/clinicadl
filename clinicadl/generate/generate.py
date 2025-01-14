@@ -15,8 +15,8 @@ import pandas as pd
 import torch
 import torchio as tio
 from joblib import Parallel, delayed
-from nilearn.image import resample_to_img
-
+from nilearn.image import resample_to_img, new_img_like, threshold_img
+from nilearn.masking import apply_mask
 from clinicadl.prepare_data.prepare_data_utils import compute_extract_json
 from clinicadl.utils.caps_dataset.data import CapsDataset
 from clinicadl.utils.clinica_utils import (
@@ -709,6 +709,7 @@ def generate_artifacts_dataset(
     num_transforms: int = 2,
     noise: bool = False,
     noise_std: List = [5, 15],
+    mni_mask: bool = False,
 ) -> None:
     """
     Generates a dataset, based on the images of the CAPS directory, where
@@ -744,8 +745,9 @@ def generate_artifacts_dataset(
     gamma: List
         Gamma range of simulated contrast.
     noise_std: List
-        Stadndard deviation of simulated noise.
-
+        Standard deviation of simulated noise.
+    mni_mask: bool
+        If True, an MNI mask is applied to the final image. Currently only works for flair images.
     Returns:
         Folder structure where images are stored in CAPS format.
     """
@@ -835,6 +837,18 @@ def generate_artifacts_dataset(
         artifacts = tio.transforms.Compose(artifacts_tio)
 
         artif_image = artifacts(tio.ScalarImage(image_path))
+
+        ######### WRITE HERE ##########
+        if preprocessing  == "flair-linear" and mni_mask:
+            ## load the MNI mask
+            resource_folder = Path(__file__).parent.parent / "resources" / "masks"
+
+            mask_image = tio.LabelMap(resource_folder / "final-binary-cropped-GG-853-FLAIR-1.0mm.nii.gz")
+
+            sub = tio.Subject(image=artif_image, mask=mask_image)
+            mask = tio.transforms.Mask('mask')
+            masked_sub = mask(sub)
+            artif_image = masked_sub['image']
         artif_image.save(artif_image_nii_dir / artif_image_nii_filename)
 
         # Append row to output tsv
