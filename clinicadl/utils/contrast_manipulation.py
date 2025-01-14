@@ -86,7 +86,7 @@ def get_full_gm_mask(seg_img : np.array) -> np.array:
 	return full_gm_mask
 
 
-def lower_contrast(brain_filepath : str, seg_filepath : str, anomaly_degree : float, save = True):
+def lower_contrast(brain_img : np.array, seg_img : np.array) -> np.array:
 	"""
 	
 	Parameters :
@@ -96,17 +96,6 @@ def lower_contrast(brain_filepath : str, seg_filepath : str, anomaly_degree : fl
 	-------------
 
 	"""
-
-	debug = True
-
-	## load brain
-	brain_nifti = nib.load(brain_filepath)
-	brain_img = brain_nifti.get_fdata()
-
-	## load segmentation label map
-	seg_nifti = nib.load(seg_filepath)
-	seg_img = seg_nifti.get_fdata()
-
 	normalized_brain = normalized_value(brain_img) # min max normalization
 
 	full_gm_mask = get_full_gm_mask(seg_img)
@@ -127,31 +116,4 @@ def lower_contrast(brain_filepath : str, seg_filepath : str, anomaly_degree : fl
 
 	contrast_mask = gaussian_filter(blurred_localised_gm_mask, sigma=1) 
 
-	if debug : 
-		mask_img = nib.Nifti1Image(contrast_mask, brain_nifti.affine, brain_nifti.header)
-		nib.save(mask_img, seg_filepath[:-27] + "mask_{}.nii.gz".format(0.5))
-		print("Saved final mask")
-
-	low_contrast_img = normalized_brain * contrast_mask
-	if save :
-		new_brain_img = nib.Nifti1Image(low_contrast_img, brain_nifti.affine, brain_nifti.header)
-		nib.save(new_brain_img, seg_filepath[:-27] + "lower_contrast.nii.gz")
-		print("Saved new image")
-
-	
-
-
-if __name__=='__main__':
-	print("Entered main function...")
-	#brain_filepath = "/network/iss/aramis/datasets/msseg/MSSEG/FLAIR/caps/subjects/sub-MSSEG103/ses-M00/flair_linear/sub-MSSEG103_ses-M00_FLAIR_space-MNI152NLin2009cSym_desc-Crop_res-1x1x1_flair.nii.gz"
-	#seg_filepath =  "/network/iss/aramis/users/manon.heffernan/synthseg_output/msseg/sub-MSSEG103_ses-M00_FLAIR_space-MNI152NLin2009cSym_desc-Crop_res-1x1x1_flair_synthseg.nii.gz"
-	
-	#brain_filepath = "/network/iss/aramis/datasets/msseg/MSSEG2/caps/subjects/sub-MSSEG2013/ses-M00/flair_linear/sub-MSSEG2013_ses-M00_FLAIR_space-MNI152NLin2009cSym_desc-Crop_res-1x1x1_flair.nii.gz"
-	#seg_filepath = "/network/iss/aramis/users/manon.heffernan/synthseg_output/msseg2/sub-MSSEG2013_ses-M00_FLAIR_space-MNI152NLin2009cSym_desc-Crop_res-1x1x1_flair_synthseg.nii.gz"
-	
-	brain_filepath = "/network/iss/aramis/datasets/nifd/caps_flair_linear/subjects/sub-NIFD1S0005/ses-M12/flair_linear/sub-NIFD1S0005_ses-M12_space-MNI152NLin2009cSym_desc-Crop_res-1x1x1_FLAIR.nii.gz"
-	seg_filepath = "/network/iss/aramis/users/manon.heffernan/synthseg_output/nifd/sub-NIFD1S0005_ses-M12_space-MNI152NLin2009cSym_desc-Crop_res-1x1x1_FLAIR_synthseg.nii.gz"
-	
-	anomaly_degree = 50
-	lower_contrast(brain_filepath, seg_filepath, int(anomaly_degree), save=True)
-	print("Done.")
+	return contrast_mask
