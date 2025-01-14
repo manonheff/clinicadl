@@ -710,6 +710,7 @@ def generate_artifacts_dataset(
     noise: bool = False,
     noise_std: List = [5, 15],
     mni_mask: bool = False,
+    contrast_class : int = 0,
 ) -> None:
     """
     Generates a dataset, based on the images of the CAPS directory, where
@@ -748,6 +749,11 @@ def generate_artifacts_dataset(
         Standard deviation of simulated noise.
     mni_mask: bool
         If True, an MNI mask is applied to the final image. Currently only works for flair images.
+    contrast_class: int
+        Class of contrast to apply to the image. 0 is the default contrast. 
+        1 alters locally the contrast (quarter or upper/lower half of the image).
+        2 alters globally the contrast (whole image).
+
     Returns:
         Folder structure where images are stored in CAPS format.
     """
@@ -782,10 +788,12 @@ def generate_artifacts_dataset(
         artifacts_list.append("contrast")
     if noise:
         artifacts_list.append("noise")
+    if contrast
 
     def create_artifacts_image(data_idx: int, output_df: pd.DataFrame) -> pd.DataFrame:
         participant_id = data_df.loc[data_idx, "participant_id"]
         session_id = data_df.loc[data_idx, "session_id"]
+        synthseg = data_df.loc[data_idx, "synthseg_path"]
         cohort = data_df.loc[data_idx, "cohort"]
         image_path = Path(
             clinicadl_file_reader(
@@ -824,6 +832,13 @@ def generate_artifacts_dataset(
             elif artif == "contrast":
                 artifacts_tio.append(tio.RandomGamma(log_gamma=(gamma[0], gamma[1])))
                 arti_ext += "con-"
+
+        if contrast_class == 1:
+            #partial
+            pass
+        if contrast_class == 2:
+            #full contrast
+            pass
 
         if filename_pattern.endswith(".nii.gz"):
             file_suffix = ".nii.gz"
