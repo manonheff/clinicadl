@@ -28,6 +28,7 @@ from clinicadl.utils.exceptions import DownloadError
 from clinicadl.utils.maps_manager.iotools import check_and_clean, commandline_to_json
 from clinicadl.utils.preprocessing import write_preprocessing
 from clinicadl.utils.tsvtools_utils import extract_baseline
+# from contrast_manipulation import lower_contrast
 
 from .generate_utils import (
     find_file_type,
@@ -788,12 +789,11 @@ def generate_artifacts_dataset(
         artifacts_list.append("contrast")
     if noise:
         artifacts_list.append("noise")
-    if contrast
 
     def create_artifacts_image(data_idx: int, output_df: pd.DataFrame) -> pd.DataFrame:
         participant_id = data_df.loc[data_idx, "participant_id"]
         session_id = data_df.loc[data_idx, "session_id"]
-        synthseg = data_df.loc[data_idx, "synthseg_path"]
+        synthseg_path = data_df.loc[data_idx, "synthseg_path"]
         cohort = data_df.loc[data_idx, "cohort"]
         image_path = Path(
             clinicadl_file_reader(
@@ -809,6 +809,19 @@ def generate_artifacts_dataset(
             output_dir / "subjects" / subject_name / session_name / preprocessing
         )
         artif_image_nii_dir.mkdir(parents=True, exist_ok=True)
+
+        brain_nifti = nib.load(image_path)
+        brain_img = brain_nifti.get_fdata()
+        seg_nifti = nib.load(synthseg_path)
+        seg_img = seg_nifti.get_fdata()
+
+        if contrast_class > 0 :
+            contrast_mask = 0 # np.ones_like(brain_img)
+            if contrast_class == 1:
+                contrast_mask = 0 # lower_contrast(brain_img, seg_img, local=True)
+            if contrast_class == 2:
+                contrast_mask = 0 # lower_contrast(brain_img, seg_img, local=False)
+            brain_img = brain_img * contrast_mask
 
         artifacts_tio = []
         arti_ext = ""
@@ -833,12 +846,7 @@ def generate_artifacts_dataset(
                 artifacts_tio.append(tio.RandomGamma(log_gamma=(gamma[0], gamma[1])))
                 arti_ext += "con-"
 
-        if contrast_class == 1:
-            #partial
-            pass
-        if contrast_class == 2:
-            #full contrast
-            pass
+        
 
         if filename_pattern.endswith(".nii.gz"):
             file_suffix = ".nii.gz"
@@ -851,7 +859,8 @@ def generate_artifacts_dataset(
 
         artifacts = tio.transforms.Compose(artifacts_tio)
 
-        artif_image = artifacts(tio.ScalarImage(image_path))
+        #artif_image = artifacts(tio.ScalarImage(image_path))
+        artif_image = artifacts(brain_img)
 
         ######### WRITE HERE ##########
         if preprocessing  == "flair-linear" and mni_mask:
