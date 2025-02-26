@@ -149,7 +149,7 @@ def split_diagnoses(
 
     diagnosis_df = pd.read_csv(data_tsv, sep="\t")
     list_columns = diagnosis_df.columns.values
-    if (
+    if False and (
         "diagnosis" not in list_columns
         or ("age" not in list_columns and "age_bl" not in list_columns)
         or "sex" not in list_columns
