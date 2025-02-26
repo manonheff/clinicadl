@@ -28,7 +28,7 @@ from clinicadl.utils.exceptions import DownloadError
 from clinicadl.utils.maps_manager.iotools import check_and_clean, commandline_to_json
 from clinicadl.utils.preprocessing import write_preprocessing
 from clinicadl.utils.tsvtools_utils import extract_baseline
-# from contrast_manipulation import lower_contrast
+from clinicadl.utils.contrast_manipulation import lower_contrast
 
 from .generate_utils import (
     find_file_type,
@@ -785,7 +785,7 @@ def generate_artifacts_dataset(
     artifacts_list = []
     if motion:
         artifacts_list.append("motion")
-    if contrast:
+    if contrast_class > 0 :
         artifacts_list.append("contrast")
     if noise:
         artifacts_list.append("noise")
@@ -793,7 +793,6 @@ def generate_artifacts_dataset(
     def create_artifacts_image(data_idx: int, output_df: pd.DataFrame) -> pd.DataFrame:
         participant_id = data_df.loc[data_idx, "participant_id"]
         session_id = data_df.loc[data_idx, "session_id"]
-        synthseg_path = data_df.loc[data_idx, "synthseg_path"]
         cohort = data_df.loc[data_idx, "cohort"]
         image_path = Path(
             clinicadl_file_reader(
@@ -812,15 +811,20 @@ def generate_artifacts_dataset(
 
         brain_nifti = nib.load(image_path)
         brain_img = brain_nifti.get_fdata()
-        seg_nifti = nib.load(synthseg_path)
-        seg_img = seg_nifti.get_fdata()
+        brain_affine = brain_nifti.affine
 
         if contrast_class > 0 :
-            contrast_mask = 0 # np.ones_like(brain_img)
+            try:
+                synthseg_path = data_df.loc[data_idx, "synthseg_path"]
+            except:
+                raise ValueError("Segementations are needed to generate poor contrast, but synthseg_path column is missing in the tsv file. Please add it to the tsv file or set --contrast_class to 0.")
+            seg_nifti = nib.load(synthseg_path)
+            seg_img = seg_nifti.get_fdata()
+            contrast_mask = np.ones_like(brain_img)
             if contrast_class == 1:
-                contrast_mask = 0 # lower_contrast(brain_img, seg_img, local=True)
+                contrast_mask = lower_contrast(brain_img, seg_img, local=True)
             if contrast_class == 2:
-                contrast_mask = 0 # lower_contrast(brain_img, seg_img, local=False)
+                contrast_mask = lower_contrast(brain_img, seg_img, local=False)
             brain_img = brain_img * contrast_mask
 
         artifacts_tio = []
@@ -843,10 +847,14 @@ def generate_artifacts_dataset(
                 )
                 arti_ext += "noi-"
             elif artif == "contrast":
-                artifacts_tio.append(tio.RandomGamma(log_gamma=(gamma[0], gamma[1])))
+                #DEPRECATED : #artifacts_tio.append(tio.RandomGamma(log_gamma=(gamma[0], gamma[1])))
+                contrast_mask = np.ones_like(brain_img)
+                if contrast_class == 1:
+                    contrast_mask = lower_contrast(brain_img, seg_img, local=True)
+                if contrast_class >= 2:
+                    contrast_mask = lower_contrast(brain_img, seg_img, local=False)
+                brain_img = brain_img * contrast_mask
                 arti_ext += "con-"
-
-        
 
         if filename_pattern.endswith(".nii.gz"):
             file_suffix = ".nii.gz"
@@ -858,16 +866,19 @@ def generate_artifacts_dataset(
         artif_image_nii_filename = f"{subject_name}_{session_name}_{filename_pattern}_art-{arti_ext[:-1]}{file_suffix}"
 
         artifacts = tio.transforms.Compose(artifacts_tio)
+        brain_img_expanded = np.expand_dims(brain_img, axis=0) #add "channel" dimension for torchio compatibility
+
+        brain_img_tio = tio.ScalarImage(tensor=brain_img_expanded, affine = brain_affine)
 
         #artif_image = artifacts(tio.ScalarImage(image_path))
-        artif_image = artifacts(brain_img)
+        artif_image = artifacts(brain_img_tio)
 
         ######### WRITE HERE ##########
         if preprocessing  == "flair-linear" and mni_mask:
             ## load the MNI mask
             resource_folder = Path(__file__).parent.parent / "resources" / "masks"
 
-            mask_image = tio.LabelMap(resource_folder / "final-binary-cropped-GG-853-FLAIR-1.0mm.nii.gz")
+            mask_image = tio.LabelMap(resource_folder / "final-binary-cropped-full-face-GG-853-FLAIR-1.0mm.nii.gz")
 
             sub = tio.Subject(image=artif_image, mask=mask_image)
             mask = tio.transforms.Mask('mask')

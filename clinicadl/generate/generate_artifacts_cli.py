@@ -79,6 +79,12 @@ from clinicadl.utils import cli_param
     default=[5, 15],
     help="Range for noise standard deviation. Values for range [a,b] must be provided as --noise_std a b",
 )
+@click.option(
+    "--contrast_class",
+    type=int,
+    default=0,
+    help="Contrast class. 0 for no poor contrast, 1 for partial, 2 for full.",
+)
 def cli(
     caps_directory,
     generated_caps_directory,
@@ -96,7 +102,8 @@ def cli(
     noise,
     noise_std,
     n_proc,
-    mni_mask
+    mni_mask,
+    contrast_class
 ):
     """Generation of trivial dataset with addition of synthetic artifacts.
     CAPS_DIRECTORY is the CAPS folder from where input brain images will be loaded.
@@ -120,7 +127,8 @@ def cli(
         noise=noise,
         noise_std=noise_std,
         n_proc=n_proc,
-        mni_mask = mni_mask
+        mni_mask = mni_mask,
+        contrast_class=contrast_class,
     )
 
 
