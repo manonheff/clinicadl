@@ -988,6 +988,17 @@ class RandomBlur(object):
 
         return image
 
+class RandomHorizontalFlip(object):
+    """Applies a Random Horizontal Flip"""
+
+    def __init__(self):
+        self.axes = ('LR',)
+
+    def __call__(self, image):
+        flip = tio.RandomFlip(axes=self.axes)
+        image = flip(image)
+
+        return image
 
 class RandomSwap(object):
     """Applies a Random Swap"""
@@ -1087,6 +1098,7 @@ def get_transforms(
         "RandomBlur": RandomBlur((0, 2)),
         "RandomSwap": RandomSwap(15, 100),
         "None": None,
+        "RandomHorizontalFlip": RandomHorizontalFlip(),
     }
 
     augmentation_list = []

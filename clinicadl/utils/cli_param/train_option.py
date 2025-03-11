@@ -211,6 +211,7 @@ data_augmentation = cli_param.option_group.data_group.option(
             "BiasField",
             "RandomBlur",
             "RandomSwap",
+            "RandomHorizontalFlip",
         ]
     ),
     # default=(),
