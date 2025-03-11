@@ -744,6 +744,8 @@ def generate_artifacts_dataset(
         Rotation range in degree of simulated movement.
     num_transformes: int
         Number of simulated movements.
+    contrast: bool
+        If True, the old contrast generation method is applied to the image.
     gamma: List
         Gamma range of simulated contrast.
     noise_std: List
@@ -753,7 +755,7 @@ def generate_artifacts_dataset(
     contrast_class: int
         Class of contrast to apply to the image. 0 is the default contrast. 
         1 alters locally the contrast (quarter or upper/lower half of the image).
-        2 alters globally the contrast (whole image).
+        2 alters globally the contrast (whole image).l
 
     Returns:
         Folder structure where images are stored in CAPS format.
@@ -789,6 +791,8 @@ def generate_artifacts_dataset(
         artifacts_list.append("contrast")
     if noise:
         artifacts_list.append("noise")
+    if contrast_old : 
+        artifacts_list.append("contrast_old")
 
     def create_artifacts_image(data_idx: int, output_df: pd.DataFrame) -> pd.DataFrame:
         participant_id = data_df.loc[data_idx, "participant_id"]
@@ -811,21 +815,7 @@ def generate_artifacts_dataset(
 
         brain_nifti = nib.load(image_path)
         brain_img = brain_nifti.get_fdata()
-        brain_affine = brain_nifti.affine
-
-        if contrast_class > 0 :
-            try:
-                synthseg_path = data_df.loc[data_idx, "synthseg_path"]
-            except:
-                raise ValueError("Segementations are needed to generate poor contrast, but synthseg_path column is missing in the tsv file. Please add it to the tsv file or set --contrast_class to 0.")
-            seg_nifti = nib.load(synthseg_path)
-            seg_img = seg_nifti.get_fdata()
-            contrast_mask = np.ones_like(brain_img)
-            if contrast_class == 1:
-                contrast_mask = lower_contrast(brain_img, seg_img, local=True)
-            if contrast_class == 2:
-                contrast_mask = lower_contrast(brain_img, seg_img, local=False)
-            brain_img = brain_img * contrast_mask
+        brain_affine = brain_nifti.affineq
 
         artifacts_tio = []
         arti_ext = ""
@@ -846,12 +836,20 @@ def generate_artifacts_dataset(
                     )
                 )
                 arti_ext += "noi-"
+            elif artif == "contrast_old":
+                artifacts_tio.append(tio.RandomGamma(log_gamma=(gamma[0], gamma[1])))
+                arti_ext += "con_old-"
             elif artif == "contrast":
-                #DEPRECATED : #artifacts_tio.append(tio.RandomGamma(log_gamma=(gamma[0], gamma[1])))
+                try:
+                    synthseg_path = data_df.loc[data_idx, "synthseg_path"]
+                except:
+                    raise ValueError("Segmentations are needed to generate poor contrast, but synthseg_path column is missing in the tsv file. Please add it to the tsv file or set --contrast_class to 0.")
+                seg_nifti = nib.load(synthseg_path)
+                seg_img = seg_nifti.get_fdata()
                 contrast_mask = np.ones_like(brain_img)
                 if contrast_class == 1:
                     contrast_mask = lower_contrast(brain_img, seg_img, local=True)
-                if contrast_class >= 2:
+                if contrast_class == 2:
                     contrast_mask = lower_contrast(brain_img, seg_img, local=False)
                 brain_img = brain_img * contrast_mask
                 arti_ext += "con-"

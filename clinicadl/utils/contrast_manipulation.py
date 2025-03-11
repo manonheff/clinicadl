@@ -68,14 +68,14 @@ def localised_poor_contrast_mask(seg_img: np.array, fo_margin : float = 0.1) -> 
 	wm_labels = []
 	if zone == 0 : #left hemisphere
 		gm_labels, wm_labels = left_gm_labels, left_wm_labels
-		#print("left hemisphere")
+		print("left hemisphere")
 	elif zone == 1 : #right hemisphere
 		gm_labels, wm_labels = right_gm_labels, right_wm_labels
-		#print('right hemisphere')
+		print('right hemisphere')
 	elif zone == 2 : #both hemispheres
 		gm_labels = left_gm_labels + right_gm_labels
 		wm_labels = left_wm_labels + right_wm_labels
-		#print("both hemispheres")
+		print("both hemispheres")
 	hemi_gm_mask, hemi_wm_mask = np.isin(seg_img, gm_labels), np.isin(seg_img, wm_labels)
 
 	### randomly choose occipital/frontal zone
@@ -84,10 +84,10 @@ def localised_poor_contrast_mask(seg_img: np.array, fo_margin : float = 0.1) -> 
 	fo_mask = np.zeros_like(seg_img)
 	if np.random.random() < 0.5 : #occipital area
 		fo_mask[:,0:pos_y,:] = 1
-		#print("occipital area")
+		print("occipital area")
 	else : #frontal area
 		fo_mask[:,pos_y:,:] = 1
-		#print("frontal area")
+		print("frontal area")
 	
 	quadran_gm_mask = hemi_gm_mask * fo_mask
 	quadran_wm_mask = hemi_wm_mask * fo_mask
@@ -119,7 +119,7 @@ def lower_contrast(brain_img : np.array, seg_img : np.array, local : bool = Fals
 	wm = normalized_brain[localised_wm_mask]
 	gm = normalized_brain[localised_gm_mask]
 	med_percent_diff = 2 * (np.median(gm) - np.median(wm)) / (np.median(gm) + np.median(wm)) * 100
-	#print("Median percentage difference:",med_percent_diff)
+	print("Median percentage difference:",med_percent_diff)
 
 	dilated = dilation(localised_gm_mask, footprint = ball(radius = 2))
 	coef = np.random.uniform(1.5, 2.1)
