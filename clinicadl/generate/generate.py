@@ -791,7 +791,7 @@ def generate_artifacts_dataset(
         artifacts_list.append("contrast")
     if noise:
         artifacts_list.append("noise")
-    if contrast_old : 
+    if contrast : 
         artifacts_list.append("contrast_old")
 
     def create_artifacts_image(data_idx: int, output_df: pd.DataFrame) -> pd.DataFrame:
@@ -815,7 +815,7 @@ def generate_artifacts_dataset(
 
         brain_nifti = nib.load(image_path)
         brain_img = brain_nifti.get_fdata()
-        brain_affine = brain_nifti.affineq
+        brain_affine = brain_nifti.affine
 
         artifacts_tio = []
         arti_ext = ""
@@ -848,9 +848,15 @@ def generate_artifacts_dataset(
                 seg_img = seg_nifti.get_fdata()
                 contrast_mask = np.ones_like(brain_img)
                 if contrast_class == 1:
-                    contrast_mask = lower_contrast(brain_img, seg_img, local=True)
+                    if preprocessing == "t1-linear":
+                        contrast_mask = lower_contrast(brain_img, seg_img, local=True, t1 = True)
+                    else :
+                        contrast_mask = lower_contrast(brain_img, seg_img, local=True)
                 if contrast_class == 2:
-                    contrast_mask = lower_contrast(brain_img, seg_img, local=False)
+                    if preprocessing == "t1-linear":
+                        contrast_mask = lower_contrast(brain_img, seg_img, local=False, t1 = True)
+                    else : 
+                        contrast_mask = lower_contrast(brain_img, seg_img, local=False)
                 brain_img = brain_img * contrast_mask
                 arti_ext += "con-"
 

@@ -96,7 +96,7 @@ def localised_poor_contrast_mask(seg_img: np.array, fo_margin : float = 0.1) -> 
 	#return quadran_gm_mask, quadran_wm_mask
 
 
-def lower_contrast(brain_img : np.array, seg_img : np.array, local : bool = False) -> np.array:
+def lower_contrast(brain_img : np.array, seg_img : np.array, local : bool = False, t1 = False) -> np.array:
 	"""
 	
 	Parameters :
@@ -120,11 +120,16 @@ def lower_contrast(brain_img : np.array, seg_img : np.array, local : bool = Fals
 	gm = normalized_brain[localised_gm_mask]
 	med_percent_diff = 2 * (np.median(gm) - np.median(wm)) / (np.median(gm) + np.median(wm)) * 100
 	print("Median percentage difference:",med_percent_diff)
-
-	dilated = dilation(localised_gm_mask, footprint = ball(radius = 2))
+	if t1 : #decrease value of wm instead
+		dilated = dilation(localised_gm_mask, footprint = ball(radius = 2))
+	else : #flair
+		dilated = dilation(localised_gm_mask, footprint = ball(radius = 2))
 	coef = np.random.uniform(1.5, 2.1)
 	#print("Intensity coef:", coef)
-	blurred_localised_gm_mask = smooth_mask(dilated, med_percent_diff * coef, sigma = 2.5)
+	if t1 : 
+		blurred_localised_gm_mask = smooth_mask(dilated, med_percent_diff, sigma = 2.5)
+	else :
+		blurred_localised_gm_mask = smooth_mask(dilated, med_percent_diff * coef, sigma = 2.5)
 	blurred_localised_gm_mask *= full_gm_mask # keep only the gm part
 	blurred_localised_gm_mask[blurred_localised_gm_mask == 0] = 1 # recreate multiplicative mask
 
