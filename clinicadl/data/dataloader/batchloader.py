@@ -2,7 +2,7 @@ from typing import Any, List, Union
 
 import torch
 import torchio as tio
-
+import numpy as np
 from clinicadl.transforms.extraction import Sample
 
 
@@ -42,7 +42,7 @@ class BatchLoader(list):
             torch.Tensor: A tensor containing all the images from the batch.
         """
         # Return the images of the batch
-        return torch.stack([sample.image.tensor for sample in self], dim=0)
+        return torch.cat([sample.get_tensors()["image"] for sample in self], dim=0).unsqueeze(1) #changed !
 
     def get_labels(self) -> Union[torch.Tensor, List[Any]]:
         """
@@ -55,18 +55,21 @@ class BatchLoader(list):
             It will be a list if the labels are heterogeneous (e.g. a mask and a scalar) or if any
             of the label is ``None``. Otherwise, it will be a tensor.
         """
-        labels = [
-            sample.label.tensor
-            if isinstance(sample.label, tio.LabelMap)
-            else sample.label
-            for sample in self
-        ]
+        if False :
+            labels = [
+                sample.label.tensor
+                if isinstance(sample.label, tio.LabelMap)
+                else sample.label
+                for sample in self
+            ]
+        else : 
+            labels = [sample.label for sample in self]
         if all(isinstance(label, torch.Tensor) for label in labels):
             return torch.stack(labels, dim=0)
-        elif all(isinstance(label, (int, float)) for label in labels):
+        elif all(isinstance(label, (np.int64, int, float)) for label in labels):
             return torch.tensor(
                 labels,
-                dtype=torch.float32,
+                dtype=torch.long,
             )
         else:
             return labels

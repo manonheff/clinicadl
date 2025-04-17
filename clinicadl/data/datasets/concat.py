@@ -293,7 +293,10 @@ class ConcatDataset(TorchConcatDataset):
         Checks that a sample index is valid.
         """
         if not isinstance(idx, int) or idx < 0:
-            raise IndexError(f"Index must be a non-negative integer, got {idx}.")
+            if isinstance(idx, np.int64):
+                pass
+            else :
+                raise IndexError(f"Index must be a non-negative integer, got {type(idx)} with value {idx}.")
         if idx >= len(self):
             raise IndexError(
                 f"Index out of range, there are only {len(self)} samples in total in the dataset."

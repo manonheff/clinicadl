@@ -6,6 +6,7 @@ from logging import getLogger
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
 
+import numpy as np
 import pandas as pd
 import torch
 import torchio as tio
@@ -514,7 +515,10 @@ class CapsDataset(Dataset):
             If ``column`` is not in the metadata DataFrame.
         """
         if not isinstance(idx, int) or idx < 0:
-            raise IndexError(f"Index must be a non-negative integer, got {idx}.")
+            if isinstance(idx, np.int64):
+                pass
+            else : 
+                raise IndexError(f"Index must be a non-negative integer, got {type(idx)} with value Ò{idx}.")
         if idx >= len(self):
             raise IndexError(
                 f"Index out of range, there are only {len(self)} samples in the dataset."
