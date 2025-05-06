@@ -263,6 +263,18 @@ class ConcatDataset(TorchConcatDataset):
             The list of (participant, session).
         """
         return list(set(zip(self.df[PARTICIPANT_ID], self.df[SESSION_ID])))
+    
+    def get_labels(self, col:str='label') -> List[str]:
+        """
+        Retrieves the labels of the dataset.
+
+        Returns
+        -------
+        List[str]
+            The list of labels.
+        """
+        print(self.df.columns)
+        return list(set(zip(self.df['label'])))
 
     def __getitem__(self, idx: int) -> Sample:
         """
