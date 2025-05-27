@@ -755,7 +755,7 @@ def generate_artifacts_dataset(
     contrast_class: int
         Class of contrast to apply to the image. 0 is the default contrast. 
         1 alters locally the contrast (quarter or upper/lower half of the image).
-        2 alters globally the contrast (whole image).l
+        2 alters globally the contrast (whole image).
 
     Returns:
         Folder structure where images are stored in CAPS format.
