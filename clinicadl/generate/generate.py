@@ -837,8 +837,10 @@ def generate_artifacts_dataset(
                 )
                 arti_ext += "noi-"
             elif artif == "contrast_old":
+                #print(gamma)
                 artifacts_tio.append(tio.RandomGamma(log_gamma=(gamma[0], gamma[1])))
-                arti_ext += "con_old-"
+                arti_ext += f"con_old_{gamma[1]}_"
+                #print(arti_ext)
             elif artif == "contrast":
                 try:
                     synthseg_path = data_df.loc[data_idx, "synthseg_path"]
@@ -858,7 +860,7 @@ def generate_artifacts_dataset(
                     else : 
                         contrast_mask = lower_contrast(brain_img, seg_img, local=False)
                 brain_img = brain_img * contrast_mask
-                arti_ext += "con-"
+                arti_ext += "con"
 
         if filename_pattern.endswith(".nii.gz"):
             file_suffix = ".nii.gz"
