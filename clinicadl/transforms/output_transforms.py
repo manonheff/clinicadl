@@ -6,7 +6,7 @@ import torch
 import torchio as tio
 from pydantic import field_serializer, model_validator
 
-from clinicadl.data.dataloader import BatchLoader
+from clinicadl.data.dataloader import Batch
 from clinicadl.data.structures import DataPoint
 from clinicadl.utils.config import ClinicaDLConfig
 
@@ -111,7 +111,7 @@ class OutputTransforms(ClinicaDLConfig):
         return output
 
     def batch_apply(
-        self, batch_tensor: torch.Tensor, data: BatchLoader
+        self, batch_tensor: torch.Tensor, data: Batch
     ) -> tuple[torch.Tensor, torch.Tensor]:
         """
         Applies the transformations to a batch of images and samples.
@@ -132,12 +132,12 @@ class OutputTransforms(ClinicaDLConfig):
         transformed_labels = []
 
         for i in range(batch_tensor.shape[0]):
-            output_sample = deepcopy(data[i])
-            output_sample.sample = batch_tensor[
+            # output_sample = deepcopy(data[i])
+            output_sample = batch_tensor[
                 i
             ]  # Assuming batch_tensor has the same shape as the image in the samples
 
-            output_datapoint = output_sample.get_datapoint()
+            output_datapoint = output_sample
             transformed_output_datapoint = self.apply(output_datapoint)
 
             transformed_outputs.append(transformed_output_datapoint.image)

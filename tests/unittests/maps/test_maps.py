@@ -22,7 +22,7 @@ from clinicadl.utils.exceptions import (
 maps_test = Path(__file__).parents[1] / "resources" / "maps_test"
 maps_example = Path(__file__).parents[1] / "resources" / "maps_example"
 caps_dir = Path(__file__).parents[1] / "resources" / "caps_example"
-data = pd.read_csv(caps_dir / "labels.tsv", sep="\t")
+data = pd.read_csv(caps_dir / "tsv" / "labels.tsv", sep="\t")
 
 train_dataset = CapsDataset(
     caps_dir,
@@ -63,10 +63,11 @@ split = Split(
 
 def test_good_maps():
     maps = Maps(maps_test)
-    maps.remove()
+    if maps.exists():
+        maps.remove()
 
-    assert maps.splits == {}
-    assert maps.data_groups == {}
+    assert not maps.splits
+    assert not maps.data_groups
     assert maps.groups_dir == maps_test / "groups"
     assert maps.train_val_tsv == maps_test / "train+validation.tsv"
     assert maps.requirements_txt == maps_test / "environment.txt"
@@ -114,7 +115,8 @@ def test_good_maps():
 
 def test_good_split_dir():
     maps = Maps(maps_test)
-    maps.remove()
+    if maps.exists():
+        maps.remove()
     maps.create()
     maps.create_split(
         split=split, best_metrics=[MSEMetricConfig().name, MAEMetricConfig().name]
@@ -150,7 +152,8 @@ def test_good_split_dir():
 
 def test_good_best_metrics():
     maps = Maps(maps_test)
-    maps.remove()
+    if maps.exists():
+        maps.remove()
     maps.create()
     maps.create_split(
         split=split, best_metrics=[MSEMetricConfig().name, MAEMetricConfig().name]
@@ -279,7 +282,8 @@ def test_bad_load():
 
 def test_bad_best_metrics():
     maps = Maps(maps_test)
-    maps.remove()
+    if maps.exists():
+        maps.remove()
     maps.create()
     maps.create_split(
         split=split, best_metrics=[MSEMetricConfig().name, MAEMetricConfig().name]
@@ -298,7 +302,8 @@ def test_bad_best_metrics():
 
 def test_bad_split_dir():
     maps = Maps(maps_test)
-    maps.remove()
+    if maps.exists():
+        maps.remove()
     maps.create()
     maps.create_split(
         split=split, best_metrics=[MSEMetricConfig().name, MAEMetricConfig().name]
@@ -312,7 +317,8 @@ def test_bad_split_dir():
 
 def test_bad_maps():
     maps = Maps("maps_test")
-    maps.remove()
+    if maps.exists():
+        maps.remove()
 
     with pytest.raises(ClinicaDLConfigurationError):
         maps.split_list

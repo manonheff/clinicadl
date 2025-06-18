@@ -3,7 +3,7 @@ from copy import deepcopy
 from pathlib import Path
 from typing import Any, Dict
 
-from clinicadl.dictionary.words import NAME
+import torch
 
 
 def read_json(json_path: Path) -> Dict[str, Any]:
@@ -12,7 +12,7 @@ def read_json(json_path: Path) -> Dict[str, Any]:
     """
 
     if not json_path.is_file():
-        raise FileNotFoundError(f"This json file {json_path} does not exist.")
+        raise FileNotFoundError(f"The json file {json_path} does not exist.")
 
     with open(json_path, "r") as json_file:
         try:
@@ -27,13 +27,14 @@ def write_json(json_path: Path, data: Dict[str, Any], overwrite: bool = False) -
     """
     Writes the serialized config class to a JSON file.
     """
+    json_path.parent.mkdir(exist_ok=True, parents=True)
 
     if json_path.is_file() and not overwrite:
         raise FileExistsError(f"The JSON file already exists: {json_path}")
     elif json_path.is_file() and overwrite:
         json_path.unlink()
 
-    with open(json_path, "w") as json_file:
+    with open(json_path, "w", encoding="utf-8") as json_file:
         json.dump(data, json_file, indent=4, default=path_encoder)
 
 
@@ -63,15 +64,19 @@ def path_encoder(obj):
     Recursively convert Path objects to strings in dicts
     where keys suggest they point to filesystem paths.
     """
+    if isinstance(obj, list):
+        return [path_encoder(item) for item in obj]
+    if isinstance(obj, torch.nn.modules.Module):
+        return obj.__class__.__name__
     if isinstance(obj, Path):
         return obj.as_posix()
 
-    elif isinstance(obj, dict):
+    if isinstance(obj, dict):
         for key, value in obj.items():
             obj[key] = path_encoder(value)
         return obj
-    else:
-        return obj
+
+    return obj
 
 
 def path_decoder(obj):

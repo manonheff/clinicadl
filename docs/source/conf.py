@@ -1,3 +1,8 @@
+import inspect
+from datetime import date
+
+import clinicadl
+
 # Configuration file for the Sphinx documentation builder.
 #
 # For the full list of built-in configuration values, see the documentation:
@@ -7,9 +12,10 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = "ClinicaDL"
-copyright = "2025, ARAMIS Lab"
 author = "ARAMIS Lab"
-release = "2.0"
+copyright = f"{date.today().year}, {author}"
+# version = release = clinicadl.__version__
+version = "2.0"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -19,6 +25,7 @@ extensions = [
     "sphinx.ext.intersphinx",
     "sphinx_design",
     "sphinx.ext.extlinks",
+    "sphinx_autodoc_typehints",
 ]
 
 templates_path = ["_templates"]
@@ -36,7 +43,7 @@ extlinks = {
         None,
     ),
     "tutorials": (
-        "https://github.com/aramis-lab/clinicadl/blob/clinicadl_v2/tutorials/%s",
+        "https://github.com/aramis-lab/clinicadl-tutorials/tree/main/%s",
         None,
     ),
     "zoo": (
@@ -44,18 +51,72 @@ extlinks = {
         None,
     ),
 }
+language = "en"
+# pygments_style = "friendly"
+
+# -- Hide function with @overload ---------------------------------------
+
+typehints_use_signature = True  # replaces the signature with type hints
+typehints_use_signature_return = True
+typehints_document_rtype = False
+
+
+def is_overload_function(obj):
+    # `overload` sets __code__.co_code to b''
+    if inspect.isfunction(obj) or inspect.ismethod(obj):
+        try:
+            return obj.__code__.co_code == b""
+        except AttributeError:
+            return False
+    return False
+
+
+def skip_overload_members(app, what, name, obj, skip, options):
+    if is_overload_function(obj):
+        return True  # skip this member
+    return None
+
+
+def setup(app):
+    app.connect("autodoc-skip-member", skip_overload_members)
+
+
+# -- Hide function with @overload ---------------------------------------
+
+typehints_use_signature = True  # replaces the signature with type hints
+
+
+def is_overload_function(obj):
+    # `overload` sets __code__.co_code to b''
+    if inspect.isfunction(obj) or inspect.ismethod(obj):
+        try:
+            return obj.__code__.co_code == b""
+        except AttributeError:
+            return False
+    return False
+
+
+def skip_overload_members(app, what, name, obj, skip, options):
+    if is_overload_function(obj):
+        return True  # skip this member
+    return None
+
+
+def setup(app):
+    app.connect("autodoc-skip-member", skip_overload_members)
 
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-html_theme = "sphinx_book_theme"
+html_theme = "furo"
 html_theme_options = {
-    "path_to_docs": "docs",
-    "repository_url": "https://github.com/aramis-lab/clinicadl",
-    "repository_branch": "dev",
-    "navigation_with_keys": False,
-    "show_navbar_depth": 4,
+    "light_logo": "black_logo.png",
+    "dark_logo": "white_logo.png",
 }
-html_title = "ClinicaDL documentation"
+
 html_static_path = ["_static"]
+html_favicon = "_static/black_logo.png"
+html_copy_source = False
+html_show_sourcelink = False
+html_title = f"{project} {version} documentation"
