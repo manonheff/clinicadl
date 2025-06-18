@@ -85,6 +85,13 @@ from clinicadl.utils import cli_param
     default=0,
     help="Contrast class. 0 for no poor contrast, 1 for partial, 2 for full.",
 )
+@click.option(
+    "--noise_mean",
+    type=float,
+    nargs=2,
+    default=[0, 0],
+    help="Mean value for the noise.",
+)
 def cli(
     caps_directory,
     generated_caps_directory,
@@ -101,6 +108,7 @@ def cli(
     num_transforms,
     noise,
     noise_std,
+    noise_mean,
     n_proc,
     mni_mask,
     contrast_class
@@ -126,6 +134,7 @@ def cli(
         num_transforms=num_transforms,
         noise=noise,
         noise_std=noise_std,
+        noise_mean=noise_mean,
         n_proc=n_proc,
         mni_mask = mni_mask,
         contrast_class=contrast_class,

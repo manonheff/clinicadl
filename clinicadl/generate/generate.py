@@ -710,6 +710,7 @@ def generate_artifacts_dataset(
     num_transforms: int = 2,
     noise: bool = False,
     noise_std: List = [5, 15],
+    noise_mean: List = [0, 0],
     mni_mask: bool = False,
     contrast_class : int = 0,
 ) -> None:
@@ -750,6 +751,8 @@ def generate_artifacts_dataset(
         Gamma range of simulated contrast.
     noise_std: List
         Standard deviation of simulated noise.
+    noise_mean : List
+		Mean of simulated noise.
     mni_mask: bool
         If True, an MNI mask is applied to the final image. Currently only works for flair images.
     contrast_class: int
@@ -835,7 +838,7 @@ def generate_artifacts_dataset(
                         std=(noise_std[0], noise_std[1]),
                     )
                 )
-                arti_ext += "noi-"
+                arti_ext += f"noi_{noise_std[0]}-{noise_std[1]}_"
             elif artif == "contrast_old":
                 #print(gamma)
                 artifacts_tio.append(tio.RandomGamma(log_gamma=(gamma[0], gamma[1])))
