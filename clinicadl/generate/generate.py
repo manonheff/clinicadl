@@ -14,6 +14,7 @@ import numpy as np
 import pandas as pd
 import torch
 import torchio as tio
+
 from joblib import Parallel, delayed
 from nilearn.image import resample_to_img, new_img_like, threshold_img
 from nilearn.masking import apply_mask
@@ -28,7 +29,7 @@ from clinicadl.utils.exceptions import DownloadError
 from clinicadl.utils.maps_manager.iotools import check_and_clean, commandline_to_json
 from clinicadl.utils.preprocessing import write_preprocessing
 from clinicadl.utils.tsvtools_utils import extract_baseline
-from clinicadl.utils.contrast_manipulation import lower_contrast
+from clinicadl.utils.contrast_manipulation import lower_contrast, percentile_normalisation
 
 from .generate_utils import (
     find_file_type,
@@ -818,32 +819,20 @@ def generate_artifacts_dataset(
 
         brain_nifti = nib.load(image_path)
         brain_img = brain_nifti.get_fdata()
+        brain_img = percentile_normalisation(brain_img, axis=None)
         brain_affine = brain_nifti.affine
 
-        artifacts_tio = []
+        artifacts_tio = [tio.RescaleIntensity(percentiles=(1, 99))]
         arti_ext = ""
         for artif in artifacts_list:
-            if artif == "motion":
-                artifacts_tio.append(
-                    tio.RandomMotion(
-                        degrees=(rotation[0], rotation[1]),
-                        translation=(translation[0], translation[1]),
-                        num_transforms=num_transforms,
-                    )
-                )
-                arti_ext += "mot-"
-            elif artif == "noise":
-                artifacts_tio.append(
-                    tio.RandomNoise(
-                        std=(noise_std[0], noise_std[1]),
-                    )
-                )
-                arti_ext += f"noi_{noise_std[0]}-{noise_std[1]}_"
-            elif artif == "contrast_old":
+            if artif == "contrast_old":
                 #print(gamma)
                 artifacts_tio.append(tio.RandomGamma(log_gamma=(gamma[0], gamma[1])))
-                arti_ext += f"con_old_{gamma[1]}_"
+                artifacts_tio.append(tio.RescaleIntensity())
+                arti_ext += f"con_old-"
+                #arti_ext += f"con_old_{gamma[1]}_"
                 #print(arti_ext)
+                
             elif artif == "contrast":
                 try:
                     synthseg_path = data_df.loc[data_idx, "synthseg_path"]
@@ -863,7 +852,29 @@ def generate_artifacts_dataset(
                     else : 
                         contrast_mask = lower_contrast(brain_img, seg_img, local=False)
                 brain_img = brain_img * contrast_mask
-                arti_ext += "con"
+                arti_ext += "con_synthseg-"
+                
+            elif artif == "motion":
+                artifacts_tio.append(
+                    tio.RandomMotion(
+                        degrees=(rotation[0], rotation[1]),
+                        translation=(translation[0], translation[1]),
+                        num_transforms=num_transforms,
+                    )
+                )
+                #artifacts_tio.append(tio.RescaleIntensity())
+                arti_ext += f"mot-" #rot_{rotation[0]}_trans_{translation[0]}_num_{num_transforms}_"
+                
+            elif artif == "noise":
+                artifacts_tio.append(
+                    tio.RandomNoise(
+                        std=(noise_std[0], noise_std[1]),
+                    )
+                )
+                artifacts_tio.append(tio.RescaleIntensity())
+                #arti_ext += f"noi_{noise_std[0]}_"
+                arti_ext += f"noi-"
+            
 
         if filename_pattern.endswith(".nii.gz"):
             file_suffix = ".nii.gz"

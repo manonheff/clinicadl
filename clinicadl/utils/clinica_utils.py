@@ -74,7 +74,7 @@ def bids_nii(
     elif modality == "t1":
         return {"pattern": "anat/sub-*_ses-*_T1w.nii*", "description": "T1w MRI"}
     elif modality == "flair":
-        return {"pattern": "sub-*_ses-*_flair.nii*", "description": "FLAIR T2w MRI"}
+        return {"pattern": "sub-*_ses-*_FLAIR.nii*", "description": "FLAIR T2w MRI"}
     elif modality == "dwi":
         return {"pattern": "dwi/sub-*_ses-*_dwi.nii*", "description": "DWI NIfTI"}
 
@@ -89,6 +89,7 @@ def linear_nii(modality: str, uncropped_image: bool) -> dict:
     elif modality == "T2w":
         needed_pipeline = "t2-linear"
     elif modality == "flair":
+        modality= "FLAIR"
         needed_pipeline = "flair-linear"
 
     if uncropped_image:

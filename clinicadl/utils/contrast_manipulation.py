@@ -37,6 +37,26 @@ def normalized_value(img : np.array) -> np.array:
     new_img = (img - min_value) / (max_value - min_value)
     return new_img
 
+def percentile_normalisation(img: np.ndarray, lower_percentile: float = 1., upper_percentile: float = 99., axis=None) -> np.ndarray:
+    """
+    Normalize a 4D NumPy array using percentile-based normalization.
+
+    Args:
+        img (np.ndarray): 4D array of brain MRI data.
+        lower_percentile (float, optional): Lower percentile. Defaults to 1.
+        upper_percentile (float, optional): Upper percentile. Defaults to 99.
+
+    Returns:
+        np.ndarray: Normalized image with values clipped between 0 and 1.
+    """
+    assert lower_percentile >= 0. and upper_percentile <= 100., "Percentiles must be between 0 and 100."
+    assert lower_percentile < upper_percentile, "Lower percentile must be less than upper percentile."
+    lower = np.percentile(img, lower_percentile, axis)	
+    upper = np.percentile(img, upper_percentile, axis)
+    new_img = (img - lower) / (upper - lower)
+    new_img = np.clip(new_img, 0, 1)
+    return new_img
+
 def smooth_mask(mask : np.array, anomaly_degree: float, sigma: float)-> np.array:
     ## from clinicadl generate_utils, based on generate_hypometabolism
     if mask.dtype != float:

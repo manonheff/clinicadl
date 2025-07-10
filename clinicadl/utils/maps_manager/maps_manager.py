@@ -2109,7 +2109,6 @@ class MapsManager:
             self.parameters["label_code"] = self.task_manager.generate_label_code(
                 train_df, self.label
             )
-
         full_dataset = return_dataset(
             self.caps_directory,
             train_df,

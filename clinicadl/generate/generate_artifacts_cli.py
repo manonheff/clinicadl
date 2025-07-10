@@ -53,7 +53,7 @@ from clinicadl.utils import cli_param
 )
 @click.option(
     "--rotation",
-    #    type=float,
+    type=float,
     nargs=2,
     default=[2, 4],
     help="Range in degree for the rotation. Values for range [a,b] must be provided as --rotation a b",
